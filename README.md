@@ -60,12 +60,12 @@
 ```bash
 python -m venv .venv
 .venv\\Scripts\\activate
-pip install -r requirements.txt ```
-
+pip install -r requirements.txt
+```
 ###  2️⃣ Запуск полного цикла
-
+```
 run_full_cycle.bat
-
+```
 По умолчанию скрипт выберет 6 снимков для ручной разметки.
 Можно задать число вручную:
 run_full_cycle.bat 8
