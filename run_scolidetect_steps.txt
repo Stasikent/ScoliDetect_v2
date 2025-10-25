@@ -1,0 +1,70 @@
+# ============================================================
+# ScoliDetect_v2 — полный цикл обучения и коррекции измерений
+# ============================================================
+
+# 1️⃣ Активировать виртуальное окружение
+.venv\Scripts\activate
+
+# 2️⃣ Проверить наличие CSV файлов
+#   results.csv — автоизмерения (из CLI)
+#   labels.csv  — ручные метки с колонками [file, true_angle_deg]
+dir results.csv, labels.csv
+
+# 3️⃣ Проверить структуру results.csv
+python - <<'PY'
+import pandas as pd
+print(pd.read_csv("results.csv").head())
+PY
+
+# 4️⃣ Добавить недостающую колонку "notes" (если нет)
+python - <<'PY'
+import pandas as pd
+df = pd.read_csv("results.csv")
+if "notes" not in df.columns:
+    df["notes"] = ""
+df.to_csv("results.csv", index=False)
+print("[OK] results.csv дополнен колонкой 'notes'")
+PY
+
+# 5️⃣ Проверить совпадения файлов между results.csv и labels.csv
+python - <<'PY'
+import pandas as pd
+from pathlib import Path
+auto = pd.read_csv("results.csv")
+labels = pd.read_csv("labels.csv")
+auto["file"] = auto["file"].apply(lambda p: Path(str(p)).name)
+labels["file"] = labels["file"].apply(lambda p: Path(str(p)).name)
+df = auto.merge(labels[["file","true_angle_deg"]], on="file", how="left")
+miss = df[df["true_angle_deg"].isna()][["file","angle_deg"]]
+print(f"Всего совпало: {len(df)}; без метки: {len(miss)}")
+print(miss.to_string(index=False))
+PY
+
+# 6️⃣ Запуск обучения и коррекции
+python train_and_apply_correction.py --auto results.csv --labels labels.csv --out-corrected results_corrected.csv --reports reports_ml
+
+# 7️⃣ Проверка улучшения после коррекции
+python - <<'PY'
+import pandas as pd
+from pathlib import Path
+
+df_auto = pd.read_csv("results.csv")
+df_corr = pd.read_csv("results_corrected.csv")
+df_lbl  = pd.read_csv("labels.csv")
+
+for d in (df_auto, df_corr, df_lbl):
+    d["file"] = d["file"].apply(lambda p: Path(str(p)).name)
+
+df = df_corr.merge(df_lbl[["file","true_angle_deg"]], on="file", how="inner")
+df["err_auto"] = (df["angle_deg"] - df["true_angle_deg"]).abs()
+df["err_corr"] = (df["angle_corrected"] - df["true_angle_deg"]).abs()
+
+print(df[["file","true_angle_deg","angle_deg","angle_corrected","err_auto","err_corr"]].to_string(index=False))
+print("\nMAE(auto) =", df["err_auto"].mean().round(3), "°")
+print("MAE(corr) =", df["err_corr"].mean().round(3), "°")
+PY
+
+# 8️⃣ Проверить график до/после
+#   Открой в проводнике:
+#   reports_ml\before_after.png
+explorer reports_ml

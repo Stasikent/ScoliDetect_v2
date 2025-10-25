@@ -1,0 +1,43 @@
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# === Virtual environments ===
+.venv/
+venv/
+env/
+
+# === OS trash ===
+Thumbs.db
+.DS_Store
+
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.swp
+
+# === Data / Results ===
+data/
+to_label/
+to_label_manifest.csv
+labels.csv
+results.csv
+results_corrected.csv
+reports_ml/
+out_imgs/
+overlays/
+*.pkl
+*.joblib
+
+# === Temporary / Intermediate ===
+*.tmp
+*.bak
+
+# === Batch helpers ===
+*.bat
+*.cmd
+*.ps1
+run_full_cycle.txt
